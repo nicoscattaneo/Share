@@ -1,0 +1,48 @@
+rm(list=ls())
+gc()
+Sys.setenv(LANG = "en")
+library("future.apply")
+library("here")
+library("stringr")
+library("rgl")
+library("data.table")
+library("rlas")
+
+## Increase memory max to prevent crashes
+memory.limit(size=250000000)
+
+## Isolate the names of each scans in a list
+## Names <- str_sub(list.files(here("temp.fold"), pattern = ".las"), 1, -5)
+
+Scan <- list.files(pattern = ".las", full.name = T)
+Scan <- paste(getwd(), "/", Scan, sep = "")
+
+
+nombres <- names(rlas::read.las(Scan))
+
+## Dont forget this function!
+Scan <-  lidR::readLAS(Scan)
+
+## classify ground
+Scan <- lidR::lasground(Scan, lidR::csf(sloop_smooth = TRUE,
+                                        class_threshold = 0.30,
+                                        cloth_resolution = 0.15))
+## retrive data in classified .las
+Df <- data.frame(a=rep(0, length(Scan[[1]])))
+for(h in seq_along(nombres)){
+    Df[, h] <- Scan[[h]]}
+names(Df) <- nombres
+rm(Scan)
+Scan <- Df
+rm(Df)
+
+head(Scan)
+
+## plot3d(Scan[Scan$Classification == 1, ],
+##        aspect = "iso",
+##        col = "firebrick2",
+##        size = 0.01)
+## plot3d(Scan[Scan$Classification == 2, ],
+##        aspect = "iso",
+##        col = "dodgerblue3",
+##        size = 0.01, add= T)
